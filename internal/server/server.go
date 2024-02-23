@@ -2,8 +2,8 @@ package server
 
 import (
 	"context"
-	"github.com/storm1kk/bifrost/mithril/handlers"
-	"github.com/storm1kk/bifrost/mithril/healthz"
+	"github.com/storm1kk/mithril/internal/handlers"
+	"github.com/storm1kk/mithril/internal/healthz"
 	"log"
 	"net/http"
 )
