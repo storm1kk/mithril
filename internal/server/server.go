@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"github.com/storm1kk/mithril/internal/config"
 	"github.com/storm1kk/mithril/internal/handlers"
 	"github.com/storm1kk/mithril/internal/healthz"
 	"log"
@@ -12,7 +13,7 @@ type Server struct {
 	httpServer *http.Server
 }
 
-func NewServer(addr string) *Server {
+func NewServer(config *config.Config) *Server {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/", handlers.RootHandler)
@@ -21,7 +22,7 @@ func NewServer(addr string) *Server {
 
 	return &Server{
 		httpServer: &http.Server{
-			Addr:    addr,
+			Addr:    config.HttpAddress,
 			Handler: mux,
 		},
 	}

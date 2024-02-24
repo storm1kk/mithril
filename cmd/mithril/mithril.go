@@ -17,7 +17,10 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"github.com/storm1kk/mithril/internal/config"
 	"github.com/storm1kk/mithril/internal/server"
+	"io"
 	"log"
 	"os"
 	"os/signal"
@@ -25,8 +28,19 @@ import (
 )
 
 func main() {
+	ctx := context.Background()
+	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
+	defer cancel()
+	if err := run(ctx, os.Stdout, os.Args); err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err) // TODO: handle panic?
+		os.Exit(1)
+	}
+}
 
-	srv := server.NewServer(":8080")
+func run(ctx context.Context, w io.Writer, args []string) error {
+	conf := config.NewConfig()
+
+	srv := server.NewServer(conf)
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
@@ -40,4 +54,6 @@ func main() {
 		log.Fatalf("Server Shutdown Failed:%+v", err)
 	}
 	log.Println("Server exited properly")
+
+	return nil
 }
