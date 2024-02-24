@@ -19,6 +19,7 @@ import (
 	"context"
 	"github.com/storm1kk/mithril/internal/config"
 	"github.com/storm1kk/mithril/internal/server"
+	"github.com/storm1kk/mithril/internal/storage/sqlite"
 	"log"
 	"log/slog"
 	"os"
@@ -29,11 +30,16 @@ import (
 func main() {
 	conf := config.MustLoad()
 	logger := setupLogger(conf.Environment)
+	storage, err := sqlite.New(conf.SqliteDbPath)
+	if err != nil {
+		logger.Error("Failed to init storage.", slog.Any("error", err))
+		os.Exit(1)
+	}
 
 	logger.Info("Starting mithril...", slog.String("env", conf.Environment))
 	logger.Debug("Debug messages are enabled.")
 
-	srv := server.NewServer(conf, logger)
+	srv := server.NewServer(conf, logger, storage)
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 	srv.Start()

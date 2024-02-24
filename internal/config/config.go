@@ -5,14 +5,16 @@ import "os"
 const (
 	HttpServerAddress = "HTTP_SERVER_ADDRESS"
 	Environment       = "ENVIRONMENT"
+	SqliteDbPath      = "SQLITE_DB_PATH"
 
 	EnvLocal  = "local"  // Комп разработчика
 	EnvServer = "server" // Сервер, дев или прод пока что не важно
 )
 
 type Config struct {
-	HttpAddress string
-	Environment string
+	HttpAddress  string
+	Environment  string
+	SqliteDbPath string
 }
 
 // MustLoad должна либо инстанцировать Config, либо упасть в панику
@@ -22,11 +24,13 @@ func MustLoad() *Config {
 	defaults := map[string]string{
 		HttpServerAddress: "localhost:8081",
 		Environment:       EnvLocal,
+		SqliteDbPath:      "./sqlite.db",
 	}
 
 	return &Config{
-		HttpAddress: grab(HttpServerAddress, defaults),
-		Environment: grab(Environment, defaults),
+		HttpAddress:  grab(HttpServerAddress, defaults),
+		Environment:  grab(Environment, defaults),
+		SqliteDbPath: grab(SqliteDbPath, defaults),
 	}
 }
 
