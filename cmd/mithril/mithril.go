@@ -38,7 +38,7 @@ func main() {
 }
 
 func run(ctx context.Context, w io.Writer, args []string) error {
-	conf := config.NewConfig()
+	conf := config.MustLoad()
 
 	srv := server.NewServer(conf)
 
