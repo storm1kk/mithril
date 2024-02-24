@@ -17,43 +17,44 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"github.com/storm1kk/mithril/internal/config"
 	"github.com/storm1kk/mithril/internal/server"
-	"io"
 	"log"
+	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
 )
 
 func main() {
-	ctx := context.Background()
-	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
-	defer cancel()
-	if err := run(ctx, os.Stdout, os.Args); err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err) // TODO: handle panic?
-		os.Exit(1)
-	}
-}
-
-func run(ctx context.Context, w io.Writer, args []string) error {
 	conf := config.MustLoad()
+	logger := setupLogger(conf.Environment)
 
-	srv := server.NewServer(conf)
+	logger.Info("Starting mithril...", slog.String("env", conf.Environment))
+	logger.Debug("Debug messages are enabled.")
 
+	srv := server.NewServer(conf, logger)
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
-
 	srv.Start()
-
 	<-stop
 
-	log.Println("Shutting down server...")
+	logger.Info("Shutting down server...")
 	if err := srv.Shutdown(context.Background()); err != nil {
 		log.Fatalf("Server Shutdown Failed:%+v", err)
 	}
-	log.Println("Server exited properly")
+	logger.Info("Server exited properly.")
+}
 
-	return nil
+func setupLogger(env string) *slog.Logger {
+	var logger *slog.Logger
+
+	switch env {
+	case "local":
+		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
+	case "server":
+		logger = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
+	}
+
+	return logger
 }

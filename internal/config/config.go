@@ -3,11 +3,16 @@ package config
 import "os"
 
 const (
-	httpServerAddress = "HTTP_SERVER_ADDRESS"
+	HttpServerAddress = "HTTP_SERVER_ADDRESS"
+	Environment       = "ENVIRONMENT"
+
+	EnvLocal  = "local"  // Комп разработчика
+	EnvServer = "server" // Сервер, дев или прод пока что не важно
 )
 
 type Config struct {
 	HttpAddress string
+	Environment string
 }
 
 // MustLoad должна либо инстанцировать Config, либо упасть в панику
@@ -15,11 +20,13 @@ type Config struct {
 // Паника здесь не реализована, но, например, в случае чтения из файла, если файл не найден - будем паниковать
 func MustLoad() *Config {
 	defaults := map[string]string{
-		httpServerAddress: "localhost:8081",
+		HttpServerAddress: "localhost:8081",
+		Environment:       EnvLocal,
 	}
 
 	return &Config{
-		HttpAddress: grab(httpServerAddress, defaults),
+		HttpAddress: grab(HttpServerAddress, defaults),
+		Environment: grab(Environment, defaults),
 	}
 }
 
