@@ -3,9 +3,6 @@ package server
 import (
 	"context"
 	"github.com/storm1kk/mithril/internal/config"
-	"github.com/storm1kk/mithril/internal/handlers"
-	"github.com/storm1kk/mithril/internal/handlers/user"
-	"github.com/storm1kk/mithril/internal/healthz"
 	"github.com/storm1kk/mithril/internal/storage"
 	"log/slog"
 	"net/http"
@@ -24,10 +21,7 @@ func NewServer(
 ) *Server {
 	mux := http.NewServeMux()
 
-	// TODO: extract routes
-	mux.HandleFunc("/", handlers.RootHandler)
-	mux.HandleFunc("/management/healthz", healthz.Handler)
-	mux.Handle("/api/users", user.CreateUser(logger, storage))
+	addRoutes(mux, logger, storage)
 
 	return &Server{
 		httpServer: &http.Server{

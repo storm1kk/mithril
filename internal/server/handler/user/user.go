@@ -3,6 +3,7 @@ package user
 import (
 	"encoding/json"
 	"github.com/storm1kk/mithril/internal/entity"
+	"github.com/storm1kk/mithril/internal/server/middleware"
 	"github.com/storm1kk/mithril/internal/storage"
 	"io"
 	"log/slog"
@@ -28,15 +29,21 @@ func CreateUser(logger *slog.Logger, storage storage.Storage) http.Handler {
 				slog.String("op", op),
 				slog.Any("error", err),
 				slog.String("body", bodyToString(r.Body)),
+				slog.String(middleware.HeaderKey, r.Header.Get(middleware.HeaderKey)),
 			)
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusBadRequest) // TODO: make response JSON
 			return
 		}
 
 		id, err := storage.CreateUser(u)
 		if err != nil {
-			logger.Error("Error during create user.", slog.String("op", op), slog.Any("error", err))
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			logger.Error(
+				"Error during create user.",
+				slog.String("op", op),
+				slog.Any("error", err),
+				slog.String(middleware.HeaderKey, r.Header.Get(middleware.HeaderKey)),
+			)
+			http.Error(w, err.Error(), http.StatusInternalServerError) // TODO: make response JSON
 			return
 		}
 
@@ -51,7 +58,7 @@ func CreateUser(logger *slog.Logger, storage storage.Storage) http.Handler {
 		err = json.NewEncoder(w).Encode(resp)
 		if err != nil {
 			logger.Error("Error encoding response.", slog.String("op", op), slog.Any("error", err))
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusInternalServerError) // TODO: make response JSON
 			return
 		}
 	})
