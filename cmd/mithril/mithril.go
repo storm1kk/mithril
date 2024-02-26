@@ -17,27 +17,50 @@ package main
 
 import (
 	"context"
+	"github.com/storm1kk/mithril/internal/config"
 	"github.com/storm1kk/mithril/internal/server"
+	"github.com/storm1kk/mithril/internal/storage/sqlite"
 	"log"
+	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
 )
 
 func main() {
+	conf := config.MustLoad()
+	logger := setupLogger(conf.Environment)
+	storage, err := sqlite.New(conf.SqliteDbPath)
+	if err != nil {
+		logger.Error("Failed to init storage.", slog.Any("error", err))
+		os.Exit(1)
+	}
 
-	srv := server.NewServer(":8080")
+	logger.Info("Starting mithril...", slog.String("env", conf.Environment))
+	logger.Debug("Debug messages are enabled.")
 
+	srv := server.NewServer(conf, logger, storage)
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
-
 	srv.Start()
-
 	<-stop
 
-	log.Println("Shutting down server...")
+	logger.Info("Shutting down server...")
 	if err := srv.Shutdown(context.Background()); err != nil {
 		log.Fatalf("Server Shutdown Failed:%+v", err)
 	}
-	log.Println("Server exited properly")
+	logger.Info("Server exited properly.")
+}
+
+func setupLogger(env string) *slog.Logger {
+	var logger *slog.Logger
+
+	switch env {
+	case "local":
+		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
+	case "server":
+		logger = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
+	}
+
+	return logger
 }
